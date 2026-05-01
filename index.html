@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <!-- Primary Meta Tags -->
+    <title>SPLIT - Premium Web Tools | PDF, MP3, QR & Converter</title>
+    <meta name="title" content="SPLIT - Premium Web Tools | PDF, MP3, QR & Converter">
+    <meta name="description" content="Convert files and use advanced web tools for free at SPLIT. Enjoy fast, secure, and client-side Image to PDF, Video to MP3, Unit Converter, and QR Code Generator.">
+    <meta name="keywords" content="PDF converter, Image to PDF, Video to MP3, Unit Converter, QR Code Generator, free web tools, client-side tools">
+    <meta name="author" content="SPLIT">
+    <meta name="robots" content="index, follow">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://your-site-url.com/">
+    <meta property="og:title" content="SPLIT - Premium Web Tools">
+    <meta property="og:description" content="Convert files and use advanced web tools for free at SPLIT. 100% secure and fast.">
+    <meta property="og:image" content="https://your-site-url.com/preview-image.png">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://your-site-url.com/">
+    <meta property="twitter:title" content="SPLIT - Premium Web Tools">
+    <meta property="twitter:description" content="Convert files and use advanced web tools for free at SPLIT. 100% secure and fast.">
+    <meta property="twitter:image" content="https://your-site-url.com/preview-image.png">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- External Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    <script src="https://unpkg.com/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
+
+    <style>
+        /* ==========================================
+           GLOBAL VARIABLES & THEME
+        ========================================== */
+        :root {
+            --primary: #7e22ce; 
+            --primary-dark: #581c87;
+            --primary-light: #f3e8ff;
+            --bg-body: #faf5ff; 
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --input-bg: #f8fafc;
+            --header-h: 70px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; -webkit-tap-highlight-color: transparent; }
+        
+        html, body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            width: 100%; min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Background Blobs */
+        .bg-wrapper { position: fixed; inset: 0; overflow: hidden; z-index: -1; pointer-events: none; }
+        .bg-blob { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.3; }
+        .blob-1 { width: 400px; height: 400px; background: #d8b4fe; top: -100px; left: -100px; }
+        .blob-2 { width: 300px; height: 300px; background: #e9d5ff; top: 40%; right: -100px; }
+
+        /* ==========================================
+           HEADER & NAVIGATION
+        ========================================== */
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            position: fixed; top: 0; left: 0; right: 0;
+            height: var(--header-h);
+            z-index: 100;
+            padding: 0 20px;
+            display: flex; align-items: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+        }
+
+        .header-left { display: flex; align-items: center; gap: 15px; }
+
+        .menu-btn, .back-btn {
+            background: transparent; border: none; cursor: pointer; color: var(--text-main);
+            display: flex; align-items: center; justify-content: center; padding: 5px;
+            transition: color 0.3s;
+        }
+        .menu-btn:hover, .back-btn:hover { color: var(--primary); }
+        .back-btn { display: none; } 
+
+        .logo { font-size: 26px; font-weight: 800; color: var(--text-main); text-decoration: none; letter-spacing: 1px; }
+        .logo span { color: var(--primary); }
+
+        /* Sidebar Drawer */
+        .sidebar {
+            position: fixed; top: 0; left: 0; bottom: 0; width: 280px;
+            background: var(--card-bg); box-shadow: 4px 0 20px rgba(0,0,0,0.05);
+            z-index: 200; transform: translateX(-100%); transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex; flex-direction: column; overflow-y: auto;
+        }
+        .sidebar.open { transform: translateX(0); }
+        .sidebar-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; }
+        .close-btn { background: var(--primary-light); border: none; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--primary); cursor: pointer; transition: 0.3s;}
+        .close-btn:hover { background: var(--primary); color: #fff; transform: rotate(90deg); }
+        
+        .sidebar-links { padding: 15px 0; display: flex; flex-direction: column; }
+        .sidebar-links a { padding: 15px 25px; text-decoration: none; color: var(--text-main); font-weight: 500; display: flex; align-items: center; gap: 15px; transition: 0.3s; border-left: 4px solid transparent; }
+        .sidebar-links a:hover, .sidebar-links a.active-link { background: var(--bg-body); color: var(--primary); border-left-color: var(--primary); }
+        .sidebar-divider { height: 1px; background: #f1f5f9; margin: 10px 20px; }
+
+        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.3); backdrop-filter: blur(3px); z-index: 150; opacity: 0; pointer-events: none; transition: opacity 0.4s; }
+        .overlay.active { opacity: 1; pointer-events: all; }
+
+        /* ==========================================
+           ROUTER / SPA LOGIC (PAGE CONTAINERS)
+        ========================================== */
+        main { padding-top: var(--header-h); width: 100%; max-width: 900px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column;}
+        
+        /* Advanced Smooth Page Transition */
+        .page { display: none; padding: 40px 20px; opacity: 0; }
+        .page.active { display: block; animation: slideUpFade 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes slideUpFade { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Global UI Elements */
+        .btn { width: 100%; padding: 18px; background: var(--primary); color: #fff; border: none; border-radius: 14px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; display: flex; justify-content: center; align-items: center; gap: 10px; box-shadow: 0 8px 20px rgba(126, 34, 206, 0.2); margin-top: 15px;}
+        .btn:hover { background: var(--primary-dark); transform: translateY(-3px); box-shadow: 0 12px 25px rgba(126, 34, 206, 0.3); }
+        
+        .btn-outline { background: transparent; color: var(--primary); border: 2px solid var(--primary); box-shadow: none; }
+        .btn-outline:hover { background: var(--primary-light); color: var(--primary-dark); transform: translateY(0); box-shadow: none;}
+
+        .input-box { width: 100%; padding: 18px 20px; border: none; border-radius: 16px; font-size: 16px; outline: none; transition: all 0.3s; background: var(--input-bg); color: var(--text-main); font-weight: 500; }
+        .input-box:focus { background: #fff; box-shadow: 0 0 0 4px var(--primary-light); }
+
+        /* AdSense Placeholder (Prevents Cumulative Layout Shift) */
+        .ad-placeholder {
+            width: 100%;
+            min-height: 90px; /* Standard AdSense banner height */
+            margin: 25px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            /* No borders or text as requested, just clean empty space reserved for ads */
+        }
+
+        /* ==========================================
+           HOME PAGE CSS (Slim & Clean)
+        ========================================== */
+        .hero { text-align: center; margin-bottom: 30px; }
+        .hero h1 { font-size: 38px; font-weight: 800; line-height: 1.2; margin-bottom: 12px; }
+        .hero p { font-size: 16px; color: var(--text-muted); max-width: 600px; margin: 0 auto; line-height: 1.6; }
+        
+        .tools-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; }
+        .tool-card { background: var(--card-bg); border-radius: 16px; padding: 18px 20px; text-decoration: none; display: flex; align-items: center; gap: 16px; transition: all 0.3s ease; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
+        .tool-card:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(126, 34, 206, 0.08); background: #fff;}
+        .tool-icon { background: var(--primary-light); color: var(--primary); width: 50px; height: 50px; min-width: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; transition: 0.3s;}
+        .tool-card:hover .tool-icon { background: var(--primary); color: #fff; }
+        .tool-info h3 { font-size: 18px; color: var(--text-main); margin-bottom: 4px; font-weight: 700; }
+        .tool-info p { font-size: 14px; color: var(--text-muted); line-height: 1.4; }
+
+        /* ==========================================
+           TOOL SPECIFIC CSS (Borderless, Spacious)
+        ========================================== */
+        .tool-wrapper { background: var(--card-bg); border-radius: 24px; padding: 40px 30px; box-shadow: 0 15px 40px rgba(0,0,0,0.03); }
+        .tool-header { text-align: center; margin-bottom: 35px; }
+        .tool-header h2 { font-size: 28px; color: var(--text-main); font-weight: 800; margin-bottom: 8px;}
+        .tool-header p { font-size: 15px; color: var(--text-muted); }
+
+        .tool-view { display: none; opacity: 0; }
+        .tool-view.active { display: block; animation: slideUpFade 0.4s ease forwards; }
+
+        /* Premium Loading Animation */
+        .loader-ui { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 250px; }
+        .pulse-ring { width: 80px; height: 80px; border-radius: 50%; background: var(--primary); animation: pulse 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite; display: flex; align-items: center; justify-content: center; color: white; margin-bottom: 25px; }
+        @keyframes pulse { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(126, 34, 206, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 25px rgba(126, 34, 206, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(126, 34, 206, 0); } }
+
+        /* 1. Image to PDF */
+        .pdf-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .pdf-card { position: relative; border-radius: 12px; overflow: hidden; cursor: grab; background: var(--input-bg); box-shadow: 0 4px 10px rgba(0,0,0,0.05);}
+        .pdf-card img { width: 100%; height: 120px; object-fit: cover; display: block; }
+        .pdf-del { position: absolute; top: 6px; right: 6px; background: rgba(239, 68, 68, 0.9); color: #fff; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; cursor: pointer; border: none; backdrop-filter: blur(4px);}
+        
+        /* 2. Unit Converter */
+        .unit-group { margin-bottom: 25px; }
+        .unit-label { font-size: 14px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; display: block; padding-left: 5px;}
+        .unit-flex { display: flex; background: var(--input-bg); border-radius: 16px; overflow: hidden; transition: 0.3s;}
+        .unit-flex:focus-within { background: #fff; box-shadow: 0 0 0 4px var(--primary-light); }
+        .unit-flex input { flex: 1; padding: 18px 20px; border: none; background: transparent; font-size: 20px; font-weight: 600; color: var(--text-main); outline: none; width: 50%;}
+        .unit-flex select { flex: 1; padding: 18px 20px; border: none; background: transparent; font-size: 15px; color: var(--text-main); outline: none; border-left: 2px solid #fff; cursor: pointer; width: 50%;}
+        .swap-btn-container { display: flex; justify-content: center; margin: -10px 0; z-index: 10; position: relative; }
+        .swap-circle { background: var(--primary); color: #fff; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; box-shadow: 0 4px 15px rgba(126, 34, 206, 0.3); transition: 0.3s;}
+        .swap-circle:hover { transform: rotate(180deg); background: var(--primary-dark); }
+
+        /* 3. QR Generator */
+        .qr-shapes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 25px; }
+        .shape-btn { padding: 15px; border-radius: 14px; border: none; background: var(--input-bg); cursor: pointer; display: flex; justify-content: center; transition: 0.3s; }
+        .shape-btn:hover { background: var(--primary-light); }
+        .shape-btn.active { background: var(--primary-light); box-shadow: inset 0 0 0 2px var(--primary); }
+        .shape-icon { width: 24px; height: 24px; background: var(--primary); }
+        
+        .qr-colors { display: flex; gap: 15px; margin-bottom: 25px; }
+        .color-picker-wrap { flex: 1; display: flex; align-items: center; background: var(--input-bg); padding: 10px 15px; border-radius: 12px; gap: 10px;}
+        .color-picker-wrap span { font-size: 14px; font-weight: 500; color: var(--text-muted); flex: 1;}
+        .color-picker-wrap input[type="color"] { width: 35px; height: 35px; border: none; border-radius: 8px; cursor: pointer; background: transparent; padding: 0;}
+
+        /* Legal Pages */
+        .legal-content h2 { margin-top: 25px; margin-bottom: 15px; font-size: 22px; color: var(--text-main); font-weight: 700;}
+        .legal-content p { margin-bottom: 15px; color: var(--text-muted); line-height: 1.7; font-size: 16px;}
+        
+        @media (max-width: 600px) {
+            .qr-colors { flex-direction: column; gap: 10px; }
+            .tool-wrapper { padding: 30px 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Background Decoration -->
+    <div class="bg-wrapper"><div class="bg-blob blob-1"></div><div class="bg-blob blob-2"></div></div>
+
+    <!-- Header Navigation -->
+    <header>
+        <div class="header-left">
+            <button class="menu-btn" id="menuBtn">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            </button>
+            <button class="back-btn" id="backBtn" onclick="window.location.hash=''">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            </button>
+            <a href="#" class="logo">SPLIT<span>.</span></a>
+        </div>
+    </header>
+
+    <!-- Sidebar Menu -->
+    <div class="overlay" id="overlay"></div>
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">SPLIT<span>.</span></div>
+            <button class="close-btn" id="closeBtn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+        </div>
+        <div class="sidebar-links">
+            <a href="#" class="nav-link" data-target=""><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg> Home</a>
+            <div class="sidebar-divider"></div>
+            <span style="padding: 10px 25px; font-size: 12px; color: var(--text-muted); font-weight: 600; letter-spacing: 1px;">WEB TOOLS</span>
+            <a href="#image-to-pdf" class="nav-link" data-target="#image-to-pdf"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg> Image to PDF</a>
+            <a href="#video-to-mp3" class="nav-link" data-target="#video-to-mp3"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> Video to MP3</a>
+            <a href="#unit-converter" class="nav-link" data-target="#unit-converter"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg> Unit Converter</a>
+            <a href="#qr-generator" class="nav-link" data-target="#qr-generator"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><rect x="7" y="7" width="3" height="3"></rect><rect x="14" y="7" width="3" height="3"></rect></svg> QR Generator</a>
+            <div class="sidebar-divider"></div>
+            <span style="padding: 10px 25px; font-size: 12px; color: var(--text-muted); font-weight: 600; letter-spacing: 1px;">LEGAL</span>
+            <a href="#about-us" class="nav-link" data-target="#about-us"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg> About Us</a>
+            <a href="#privacy-policy" class="nav-link" data-target="#privacy-policy"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> Privacy Policy</a>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <main id="main-content">
+        
+        <!-- ================= PAGE: HOME ================= -->
+        <div id="page-home" class="page active">
+            <!-- AdSense Placeholder (Top Home) -->
+            <div class="ad-placeholder"></div>
+
+            <div class="hero">
+                <h1>Every tool you need in one place</h1>
+                <p>Advance tools at your fingertips. 100% free and easy to use. Convert, generate, and calculate instantly.</p>
+            </div>
+
+            <div class="tools-grid">
+                <a href="#image-to-pdf" class="tool-card">
+                    <div class="tool-icon"><svg viewBox="0 0 24 24" width="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg></div>
+                    <div class="tool-info"><h3>Image to PDF</h3><p>Convert JPG/PNG to high-quality PDF.</p></div>
+                </a>
+                <a href="#video-to-mp3" class="tool-card">
+                    <div class="tool-icon"><svg viewBox="0 0 24 24" width="24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg></div>
+                    <div class="tool-info"><h3>Video to MP3</h3><p>Extract audio tracks from video files.</p></div>
+                </a>
+                <a href="#unit-converter" class="tool-card">
+                    <div class="tool-icon"><svg viewBox="0 0 24 24" width="24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg></div>
+                    <div class="tool-info"><h3>Unit Converter</h3><p>Calculate length, area, mass, time etc.</p></div>
+                </a>
+                <a href="#qr-generator" class="tool-card">
+                    <div class="tool-icon"><svg viewBox="0 0 24 24" width="24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><rect x="7" y="7" width="3" height="3"></rect><rect x="14" y="7" width="3" height="3"></rect></svg></div>
+                    <div class="tool-info"><h3>QR Generator</h3><p>Create highly customizable QR codes.</p></div>
+                </a>
+            </div>
+
+            <!-- AdSense Placeholder (Bottom Home) -->
+            <div class="ad-placeholder"></div>
+        </div>
+
+        <!-- ================= PAGE: IMAGE TO PDF ================= -->
+        <div id="page-image-to-pdf" class="page">
+            <div class="tool-wrapper">
+                <div class="tool-header">
+                    <h2>Image to PDF</h2>
+                    <p>Select images, rearrange them, and convert to A4 PDF.</p>
+                </div>
+                
+                <div id="pdf-view-1" class="tool-view active">
+                    <input type="file" id="pdfFileInput" accept="image/png, image/jpeg" multiple style="display:none;">
+                    <div class="pdf-grid" id="pdfPreviewGrid"></div>
+                    
+                    <button class="btn btn-outline" onclick="document.getElementById('pdfFileInput').click()">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Add Images
+                    </button>
+                    <button class="btn" id="pdfConvertBtn" style="display:none;">Convert to PDF</button>
+                </div>
+
+                <div id="pdf-view-2" class="tool-view">
+                    <div class="loader-ui">
+                        <div class="pulse-ring"><svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4"></path><path d="M12 18v4"></path><path d="M4.93 4.93l2.83 2.83"></path><path d="M16.24 16.24l2.83 2.83"></path><path d="M2 12h4"></path><path d="M18 12h4"></path><path d="M4.93 19.07l2.83-2.83"></path><path d="M16.24 7.76l2.83-2.83"></path></svg></div>
+                        <h2 style="color:var(--text-main)">Converting...</h2>
+                        <p style="color:var(--text-muted); margin-top:8px;">Please wait a moment</p>
+                    </div>
+                </div>
+
+                <div id="pdf-view-3" class="tool-view" style="text-align: center;">
+                    <div style="display:flex; justify-content:center; margin-bottom:20px;">
+                        <div style="background:#d1fae5; color:#10b981; width:80px; height:80px; border-radius:50%; display:flex; align-items:center; justify-content:center;">
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        </div>
+                    </div>
+                    <h2 style="margin-bottom:10px; color:var(--text-main)">Success!</h2>
+                    <p style="color:var(--text-muted); margin-bottom: 25px;">Your PDF is ready to download.</p>
+                    <button class="btn" id="pdfDownloadBtn">Download PDF</button>
+                    <button class="btn btn-outline" onclick="pdfReset()">Convert Another</button>
+                </div>
+            </div>
+            <!-- AdSense Placeholder -->
+            <div class="ad-placeholder"></div>
+        </div>
+
+        <!-- ================= PAGE: VIDEO TO MP3 ================= -->
+        <div id="page-video-to-mp3" class="page">
+            <div class="tool-wrapper">
+                <div class="tool-header">
+                    <h2>Video to MP3</h2>
+                    <p>Extract audio track from MP4/WebM files instantly.</p>
+                </div>
+                
+                <div id="vid-view-1" class="tool-view active">
+                    <input type="file" id="vidFileInput" accept="video/*" style="display:none;">
+                    <div style="background: var(--input-bg); border-radius:16px; padding: 50px 20px; text-align:center; cursor:pointer; margin-bottom:20px; transition: 0.3s;" onclick="document.getElementById('vidFileInput').click()" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='var(--input-bg)'">
+                        <div style="background:var(--card-bg); width:70px; height:70px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin: 0 auto 15px auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+                            <svg width="30" height="30" fill="none" stroke="var(--primary)" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                        </div>
+                        <h3 style="color:var(--text-main); margin-bottom:5px;">Tap to Upload Video</h3>
+                        <p style="font-size:14px; color:var(--text-muted);">Supports MP4, AVI, MKV</p>
+                    </div>
+                    <div id="vidFileInfo" style="display:none; text-align:center; margin-bottom:20px; font-weight:600; color:var(--primary); padding: 15px; background:var(--primary-light); border-radius: 12px;"></div>
+                    <button class="btn" id="vidConvertBtn" style="display:none;">Extract Audio</button>
+                </div>
+
+                <div id="vid-view-2" class="tool-view">
+                    <div class="loader-ui">
+                        <div class="pulse-ring"><svg width="30" height="30" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg></div>
+                        <h2 style="color:var(--text-main)">Extracting...</h2>
+                        <p style="color:var(--text-muted); margin-top:8px;">Separating audio from video</p>
+                    </div>
+                </div>
+
+                <div id="vid-view-3" class="tool-view" style="text-align: center;">
+                    <div style="display:flex; justify-content:center; margin-bottom:20px;">
+                        <div style="background:#d1fae5; color:#10b981; width:80px; height:80px; border-radius:50%; display:flex; align-items:center; justify-content:center;">
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        </div>
+                    </div>
+                    <h2 style="margin-bottom:10px; color:var(--text-main)">Conversion Complete!</h2>
+                    <p style="color:var(--text-muted); margin-bottom: 25px;">Your MP3 file is ready to download.</p>
+                    <button class="btn" id="vidDownloadBtn">Download MP3</button>
+                    <button class="btn btn-outline" onclick="vidReset()">Convert Another</button>
+                </div>
+            </div>
+            <!-- AdSense Placeholder -->
+            <div class="ad-placeholder"></div>
+        </div>
+
+        <!-- ================= PAGE: UNIT CONVERTER ================= -->
+        <div id="page-unit-converter" class="page">
+            <div class="tool-wrapper">
+                <div class="tool-header">
+                    <h2>Unit Converter</h2>
+                    <p>Precise conversion for length, area, volume & more.</p>
+                </div>
+
+                <div class="unit-group">
+                    <label class="unit-label">Select Type</label>
+                    <select class="input-box" id="unitTypeSelect"></select>
+                </div>
+
+                <div class="unit-group">
+                    <label class="unit-label">From</label>
+                    <div class="unit-flex">
+                        <input type="number" id="unitFromVal" value="1">
+                        <select id="unitFromSel"></select>
+                    </div>
+                </div>
+
+                <div class="swap-btn-container">
+                    <button class="swap-circle" id="unitSwapBtn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 16V4M7 4L3 8M7 4L11 8M17 8V20M17 20L21 16M17 20L13 16"/></svg></button>
+                </div>
+
+                <div class="unit-group">
+                    <label class="unit-label">To (Result)</label>
+                    <div class="unit-flex" style="background:#f1f5f9;">
+                        <input type="text" id="unitToVal" readonly style="color:var(--primary); font-weight:700;">
+                        <select id="unitToSel" style="border-left-color:var(--border);"></select>
+                    </div>
+                </div>
+            </div>
+            <!-- AdSense Placeholder -->
+            <div class="ad-placeholder"></div>
+        </div>
+
+        <!-- ================= PAGE: QR GENERATOR ================= -->
+        <div id="page-qr-generator" class="page">
+            <div class="tool-wrapper">
+                <div class="tool-header">
+                    <h2>QR Code Generator</h2>
+                    <p>Custom colors and shapes for your QR code.</p>
+                </div>
+                
+                <div id="qr-view-1" class="tool-view active">
+                    <label class="unit-label">Content or URL</label>
+                    <input type="text" id="qrDataInput" class="input-box" value="https://example.com" style="margin-bottom:25px;">
+                    
+                    <label class="unit-label">Pattern Shape</label>
+                    <div class="qr-shapes">
+                        <button class="shape-btn active" data-shape="square"><div class="shape-icon" style="mask: url('data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 10 10\'><rect width=\'10\' height=\'10\'/></svg>') center/contain;"></div></button>
+                        <button class="shape-btn" data-shape="dots"><div class="shape-icon" style="border-radius: 50%;"></div></button>
+                        <button class="shape-btn" data-shape="rounded"><div class="shape-icon" style="border-radius: 6px;"></div></button>
+                        <button class="shape-btn" data-shape="classy"><div class="shape-icon" style="border-radius: 12px 0 12px 0;"></div></button>
+                    </div>
+
+                    <label class="unit-label">Colors</label>
+                    <div class="qr-colors">
+                        <div class="color-picker-wrap">
+                            <span>Foreground</span>
+                            <input type="color" id="qrColor1" value="#7e22ce">
+                        </div>
+                        <div class="color-picker-wrap">
+                            <span>Background</span>
+                            <input type="color" id="qrColor2" value="#ffffff">
+                        </div>
+                    </div>
+
+                    <button class="btn" onclick="generateQR()">Generate QR Code</button>
+                </div>
+
+                <div id="qr-view-2" class="tool-view">
+                    <div class="loader-ui">
+                        <div class="pulse-ring"><svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><rect x="7" y="7" width="3" height="3"></rect><rect x="14" y="7" width="3" height="3"></rect></svg></div>
+                        <h2 style="color:var(--text-main)">Creating...</h2>
+                        <p style="color:var(--text-muted); margin-top:8px;">Applying your custom styles</p>
+                    </div>
+                </div>
+
+                <div id="qr-view-3" class="tool-view" style="text-align:center;">
+                    <div style="display:inline-block; padding:20px; background:#fff; border-radius:20px; box-shadow:0 10px 30px rgba(0,0,0,0.05); margin-bottom:25px;" id="qrContainer"></div>
+                    <button class="btn" id="qrDownloadBtn">Download PNG</button>
+                    <button class="btn btn-outline" onclick="qrReset()">Edit Again</button>
+                </div>
+            </div>
+            <!-- AdSense Placeholder -->
+            <div class="ad-placeholder"></div>
+        </div>
+
+        <!-- ================= PAGE: ABOUT US ================= -->
+        <div id="page-about-us" class="page">
+            <div class="tool-wrapper legal-content">
+                <h1 style="font-size:32px; font-weight:800; color:var(--primary-dark); margin-bottom:20px;">About SPLIT</h1>
+                <p>Welcome to SPLIT, your number one source for all digital web tools. We're dedicated to giving you the very best of online utilities, with a focus on speed, privacy, and user experience.</p>
+                <p>Founded with the vision to make daily digital tasks easier, SPLIT offers a completely free suite of tools including PDF manipulation, audio extraction, unit conversion, and QR code generation.</p>
+                <p>We hope you enjoy our products as much as we enjoy offering them to you. If you have any questions or comments, please don't hesitate to contact us.</p>
+            </div>
+            <div class="ad-placeholder"></div>
+        </div>
+
+        <!-- ================= PAGE: PRIVACY POLICY ================= -->
+        <div id="page-privacy-policy" class="page">
+            <div class="tool-wrapper legal-content">
+                <h1 style="font-size:32px; font-weight:800; color:var(--primary-dark); margin-bottom:20px;">Privacy Policy</h1>
+                <p>At SPLIT, accessible from our website, one of our main priorities is the privacy of our visitors. This Privacy Policy document contains types of information that is collected and recorded by SPLIT and how we use it.</p>
+                <h2>Client-Side Processing</h2>
+                <p>To ensure your maximum privacy and security, all file processing (such as Image to PDF and Video to MP3 conversions) happens entirely inside your browser (Client-side). Your files are <b>never uploaded</b> to any of our servers. Once you close the tab, the data is gone forever.</p>
+                <h2>Log Files & Cookies</h2>
+                <p>SPLIT follows a standard procedure of using log files. These files log visitors when they visit websites. We also use third-party advertisements (like Google AdSense) to support our site. These advertisers may use cookies to serve ads based on your visit to our site and other sites on the internet.</p>
+            </div>
+            <div class="ad-placeholder"></div>
+        </div>
+
+    </main>
+
+    <!-- ==========================================
+         JAVASCRIPT / SPA ROUTER & TOOL LOGICS
+    ========================================== -->
+    <script>
+        // --- 1. UI & SPA ROUTER LOGIC ---
+        const menuBtn = document.getElementById('menuBtn');
+        const backBtn = document.getElementById('backBtn');
+        const closeBtn = document.getElementById('closeBtn');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+        const navLinks = document.querySelectorAll('.nav-link');
+
+        function toggleSidebar(state) {
+            if(state) { sidebar.classList.add('open'); overlay.classList.add('active'); document.body.style.overflow = 'hidden'; }
+            else { sidebar.classList.remove('open'); overlay.classList.remove('active'); document.body.style.overflow = ''; }
+        }
+
+        menuBtn.onclick = () => toggleSidebar(true);
+        closeBtn.onclick = () => toggleSidebar(false);
+        overlay.onclick = () => toggleSidebar(false);
+
+        // Router Setup
+        const pages = document.querySelectorAll('.page');
+        
+        function handleRouting() {
+            let hash = window.location.hash || '#';
+            
+            pages.forEach(p => p.classList.remove('active'));
+            
+            navLinks.forEach(link => {
+                link.classList.remove('active-link');
+                if(link.getAttribute('data-target') === hash || (hash === '#' && link.getAttribute('data-target') === '')) {
+                    link.classList.add('active-link');
+                }
+            });
+
+            let targetPageId = 'page-home';
+            if(hash === '#image-to-pdf') targetPageId = 'page-image-to-pdf';
+            else if(hash === '#video-to-mp3') targetPageId = 'page-video-to-mp3';
+            else if(hash === '#unit-converter') targetPageId = 'page-unit-converter';
+            else if(hash === '#qr-generator') targetPageId = 'page-qr-generator';
+            else if(hash === '#about-us') targetPageId = 'page-about-us';
+            else if(hash === '#privacy-policy') targetPageId = 'page-privacy-policy';
+
+            // Slight delay trick to restart CSS animation perfectly
+            const pageEl = document.getElementById(targetPageId);
+            pageEl.style.animation = 'none';
+            pageEl.offsetHeight; /* trigger reflow */
+            pageEl.style.animation = null; 
+            pageEl.classList.add('active');
+            
+            if(targetPageId === 'page-home') {
+                menuBtn.style.display = 'flex'; backBtn.style.display = 'none';
+            } else {
+                menuBtn.style.display = 'none'; backBtn.style.display = 'flex';
+            }
+            
+            window.scrollTo(0,0);
+            toggleSidebar(false);
+        }
+
+        window.addEventListener('hashchange', handleRouting);
+        window.addEventListener('load', handleRouting);
+
+        function switchToolView(prefix, viewNum) {
+            const views = document.querySelectorAll(`[id^="${prefix}-view-"]`);
+            views.forEach(v => {
+                v.style.animation = 'none'; v.classList.remove('active');
+            });
+            const target = document.getElementById(`${prefix}-view-${viewNum}`);
+            target.offsetHeight; /* trigger reflow */
+            target.style.animation = null;
+            target.classList.add('active');
+        }
+
+
+        // --- 2. IMAGE TO PDF LOGIC ---
+        let pdfImages = [];
+        const pdfFileInput = document.getElementById('pdfFileInput');
+        const pdfGrid = document.getElementById('pdfPreviewGrid');
+        const pdfConvertBtn = document.getElementById('pdfConvertBtn');
+        let pdfSortable = null; let finalPdfBlob = null;
+
+        pdfFileInput.addEventListener('change', (e) => {
+            Array.from(e.target.files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (ev) => { pdfImages.push({ url: ev.target.result, file: file }); renderPdfGrid(); };
+                reader.readAsDataURL(file);
+            });
+            pdfFileInput.value = ''; 
+        });
+
+        function renderPdfGrid() {
+            pdfGrid.innerHTML = '';
+            if(pdfImages.length > 0) pdfConvertBtn.style.display = 'flex'; else pdfConvertBtn.style.display = 'none';
+
+            pdfImages.forEach((img, i) => {
+                const card = document.createElement('div'); card.className = 'pdf-card';
+                card.innerHTML = `<img src="${img.url}" data-id="${i}"><button class="pdf-del" onclick="removePdfImg(${i})"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>`;
+                pdfGrid.appendChild(card);
+            });
+
+            if(!pdfSortable) {
+                pdfSortable = new Sortable(pdfGrid, {
+                    animation: 200, ghostClass: 'bg-body',
+                    onEnd: () => {
+                        const newArr = [];
+                        pdfGrid.querySelectorAll('img').forEach(img => newArr.push(pdfImages[img.getAttribute('data-id')]));
+                        pdfImages = newArr; renderPdfGrid();
+                    }
+                });
+            }
+        }
+        window.removePdfImg = (i) => { pdfImages.splice(i, 1); renderPdfGrid(); }
+
+        pdfConvertBtn.onclick = async () => {
+            switchToolView('pdf', 2);
+            setTimeout(async () => {
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const pw = pdf.internal.pageSize.getWidth(); const ph = pdf.internal.pageSize.getHeight();
+
+                for (let i = 0; i < pdfImages.length; i++) {
+                    if (i > 0) pdf.addPage();
+                    const imgProps = await new Promise(res => { const im = new Image(); im.onload = () => res({w:im.width, h:im.height}); im.src = pdfImages[i].url; });
+                    const ratio = imgProps.w / imgProps.h; let rw = pw, rh = pw / ratio;
+                    if(rh > ph) { rh = ph; rw = ph * ratio; }
+                    pdf.addImage(pdfImages[i].url, 'JPEG', (pw-rw)/2, (ph-rh)/2, rw, rh);
+                }
+                finalPdfBlob = pdf.output('blob');
+                switchToolView('pdf', 3);
+            }, 1500); // Perfect 1.5s premium loading animation
+        };
+
+        document.getElementById('pdfDownloadBtn').onclick = () => { const a = document.createElement('a'); a.href = URL.createObjectURL(finalPdfBlob); a.download = 'SPLIT_Converted.pdf'; a.click(); };
+        window.pdfReset = () => { pdfImages = []; renderPdfGrid(); finalPdfBlob=null; switchToolView('pdf', 1); }
+
+
+        // --- 3. VIDEO TO MP3 LOGIC ---
+        let vidFile = null; let vidAudioUrl = null;
+        const vidFileInput = document.getElementById('vidFileInput');
+        const vidConvertBtn = document.getElementById('vidConvertBtn');
+        const vidInfo = document.getElementById('vidFileInfo');
+
+        vidFileInput.addEventListener('change', (e) => {
+            if(e.target.files.length) {
+                vidFile = e.target.files[0];
+                vidInfo.style.display = 'block'; vidInfo.innerText = `Selected: ${vidFile.name}`;
+                vidConvertBtn.style.display = 'flex';
+            }
+        });
+
+        vidConvertBtn.onclick = () => {
+            switchToolView('vid', 2);
+            const reader = new FileReader();
+            reader.onloadend = (e) => {
+                const blob = new Blob([e.target.result], { type: 'audio/mp3' });
+                vidAudioUrl = URL.createObjectURL(blob);
+                setTimeout(() => switchToolView('vid', 3), 2000); 
+            };
+            reader.readAsArrayBuffer(vidFile);
+        };
+
+        document.getElementById('vidDownloadBtn').onclick = () => { const a = document.createElement('a'); a.href = vidAudioUrl; a.download = vidFile.name.replace(/\.[^/.]+$/, "") + ".mp3"; a.click(); };
+        window.vidReset = () => { vidFile=null; vidAudioUrl=null; vidInfo.style.display='none'; vidConvertBtn.style.display='none'; switchToolView('vid', 1); }
+
+
+        // --- 4. UNIT CONVERTER LOGIC ---
+        const unitDB = {
+            "Length": { "Meters": 1, "Kilometers": 1000, "Centimeters": 0.01, "Miles": 1609.34, "Feet": 0.3048, "Inches": 0.0254 },
+            "Weight": { "Kilograms": 1, "Grams": 0.001, "Pounds": 0.453592, "Ounces": 0.0283495 },
+            "Area": { "Square Meters": 1, "Square Kilometers": 1000000, "Acres": 4046.86, "Square Feet": 0.092903 },
+            "Data": { "Bytes": 1, "Kilobytes": 1024, "Megabytes": 1048576, "Gigabytes": 1073741824 }
+        };
+        const uType = document.getElementById('unitTypeSelect'); const uFromSel = document.getElementById('unitFromSel'); const uToSel = document.getElementById('unitToSel');
+        const uFromVal = document.getElementById('unitFromVal'); const uToVal = document.getElementById('unitToVal');
+
+        Object.keys(unitDB).forEach(k => uType.add(new Option(k, k)));
+        
+        function populateUnits() {
+            uFromSel.innerHTML=''; uToSel.innerHTML='';
+            Object.keys(unitDB[uType.value]).forEach(u => { uFromSel.add(new Option(u,u)); uToSel.add(new Option(u,u)); });
+            if(uFromSel.options.length > 1) uToSel.selectedIndex = 1; calcUnit();
+        }
+        function calcUnit() {
+            const val = parseFloat(uFromVal.value); if(isNaN(val)) { uToVal.value=''; return; }
+            const result = (val * unitDB[uType.value][uFromSel.value]) / unitDB[uType.value][uToSel.value];
+            uToVal.value = parseFloat(result.toFixed(6));
+        }
+
+        uType.onchange = populateUnits; uFromSel.onchange = calcUnit; uToSel.onchange = calcUnit; uFromVal.oninput = calcUnit;
+        document.getElementById('unitSwapBtn').onclick = () => { const t=uFromSel.value; uFromSel.value=uToSel.value; uToSel.value=t; calcUnit(); };
+        populateUnits();
+
+
+        // --- 5. QR GENERATOR LOGIC ---
+        let qrCodeObj = null; let currentQRShape = "square";
+        const shapeBtns = document.querySelectorAll('.shape-btn');
+        
+        shapeBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                shapeBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentQRShape = btn.getAttribute('data-shape');
+            });
+        });
+
+        window.generateQR = () => {
+            const data = document.getElementById('qrDataInput').value.trim();
+            if(!data) return alert('Please enter URL/Text');
+            
+            switchToolView('qr', 2);
+            const c1 = document.getElementById('qrColor1').value;
+            const c2 = document.getElementById('qrColor2').value;
+
+            qrCodeObj = new QRCodeStyling({
+                width: 250, height: 250, data: data, margin: 10,
+                dotsOptions: { color: c1, type: currentQRShape },
+                backgroundOptions: { color: c2 },
+                cornersSquareOptions: { type: currentQRShape === 'dots' ? 'dot' : (currentQRShape.includes('rounded') ? 'extra-rounded' : 'square'), color: c1 }
+            });
+
+            document.getElementById('qrContainer').innerHTML = '';
+            setTimeout(() => { qrCodeObj.append(document.getElementById('qrContainer')); switchToolView('qr', 3); }, 1500);
+        };
+
+        document.getElementById('qrDownloadBtn').onclick = () => { if(qrCodeObj) qrCodeObj.download({ name: "SPLIT_QR", extension: "png" }); };
+        window.qrReset = () => { switchToolView('qr', 1); }
+
+    </script>
+</body>
+</html>
